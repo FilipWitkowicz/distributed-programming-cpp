@@ -107,7 +107,8 @@ int main(int argc, char** argv) {
 
     int available_mechanics = M;
 
-    int lamport_clock_requests = 0;
+    int LC_last_request_dock = 0;
+    int LC_last_request_mechanics = 0;
 
     int flag;
 
@@ -124,8 +125,9 @@ int main(int argc, char** argv) {
                 want_dock = true;//wiec teraz chcemy do doku
                 Z = 1 + rand() % M; // liczba potrzebnych mechanikow (1-M)
                 want_repair = true; // chcemy naprawic statek
-                lamport_clock_requests = lamport_clock;
+                LC_last_request_dock = lamport_clock;
                 send_request(1);
+                LC_last_request_mechanics = lamport_clock;
                 send_request(2, Z);
             }
         }
@@ -142,18 +144,18 @@ int main(int argc, char** argv) {
         if (status.MPI_TAG == TAG_REQUEST) {
             if (req.tag == 1) {
                 // Doki
-                msg = "Otrzymany DOK REQUEST\n\tPID\tTIMESTAMP\tWant dock?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t\t" + to_string(want_dock);
+                msg = "Otrzymany DOK REQUEST\n\tPID\tTIMESTAMP\tWant dock?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(LC_last_request_dock) + "\t\t" + to_string(want_dock);
                 print_color(msg);
-                if (!in_dock && (!want_dock || (req.timestamp < lamport_clock_requests || (req.timestamp == lamport_clock_requests && req.pid < pid)))) {
+                if (!in_dock && (!want_dock || (req.timestamp < LC_last_request_dock || (req.timestamp == LC_last_request_dock && req.pid < pid)))) {
                     send_reply(req.pid, 1); // zezwalamy na użycie doku
                 } else {
                     queue.push_back(req); // dodajemy do kolejki
                 }
             } else if (req.tag == 2) {
-                msg = "Otrzymany MECHANIC REQUEST\n\tPID\tTIMESTAMP\tWant repair?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t\t" + to_string(want_repair);
+                msg = "Otrzymany MECHANIC REQUEST\n\tPID\tTIMESTAMP\tWant repair?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(LC_last_request_mechanics) + "\t\t" + to_string(want_repair);
                 print_color(msg);
                 // Mechanicy
-                if (!in_dock && (!want_repair || (req.timestamp < lamport_clock_requests || (req.timestamp == lamport_clock_requests && req.pid < pid)))) {
+                if (!in_dock && (!want_repair || (req.timestamp < LC_last_request_mechanics || (req.timestamp == LC_last_request_mechanics && req.pid < pid)))) {
                     send_reply(req.pid, 2, 0);
                     available_mechanics -= req.mechanics;
                     msg = "Ava M = " + to_string(available_mechanics);
@@ -183,7 +185,7 @@ int main(int argc, char** argv) {
                 // Odpowiedź dotycząca mechaników
                 reply_count_mechanics++;
             }
-            msg = "\n\tReply count dock " + to_string(reply_count_dock) + "\n\t replies needed " + to_string(replies_needed) + "\n\t !in_dock " + to_string(!in_dock) + "reply_count_mechanics " + to_string(reply_count_mechanics) + "\n\t available mechanics " + to_string(available_mechanics) + "\n\t Z " + to_string(Z);
+            msg = "\n\tReply count dock " + to_string(reply_count_dock) + "\n\t replies needed " + to_string(replies_needed) + "\n\t !in_dock " + to_string(!in_dock) + "\n\treply_count_mechanics " + to_string(reply_count_mechanics) + "\n\t available mechanics " + to_string(available_mechanics) + "\n\t Z " + to_string(Z);
             print_color(msg);
             // Sprawdzanie, czy mamy wystarczająco doków
             if (reply_count_dock >= replies_needed && !in_dock) {
