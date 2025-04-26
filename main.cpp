@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
                 // Odpowiedź dotycząca mechaników
                 reply_count_mechanics++;
             }
-            msg = "\n\tReply count dock " + to_string(reply_count_dock) + "\n\t replies needed " + to_string(replies_needed) + "\n\t !in_dock " + to_string(!in_dock);
+            msg = "\n\tReply count dock " + to_string(reply_count_dock) + "\n\t replies needed " + to_string(replies_needed) + "\n\t !in_dock " + to_string(!in_dock) + "reply_count_mechanics " + to_string(reply_count_mechanics) + "\n\t available mechanics " + to_string(available_mechanics) + "\n\t Z " + to_string(Z);
             print_color(msg);
             // Sprawdzanie, czy mamy wystarczająco doków
             if (reply_count_dock >= replies_needed && !in_dock) {
