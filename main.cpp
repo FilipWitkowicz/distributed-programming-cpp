@@ -62,6 +62,8 @@ void send_request(int tag, int needed_mechanics = 0) {
             pid_to_send = pid_to_inform_about_release[i];
             MPI_Send(&req, sizeof(req), MPI_BYTE, pid_to_send, TAG_M_RELEASE, MPI_COMM_WORLD);
         }
+        lamport_clock++;
+        return;
     }
     if(tag == 1) print_color("BŁAGAM O DOK");
     else if(tag == 2) print_color("BŁAGAM O MECHANIKÓW " + to_string(needed_mechanics));
