@@ -188,6 +188,8 @@ int main(int argc, char** argv) {
                 if (req.mechanics == 0) {
                     // ten człowiek nam wysłał że nie zajmuje przed nami żadnych mechaników, czyli odjął sobie naszą liczbę mechaników, więc musimy mu potem dać release
                     pid_to_inform_about_release.push_back(req.pid);
+                    msg = "Dodano do release: " + to_string(req.pid);
+                    print_color(msg);
                 }
             }
             msg = "\n\tReply count dock " + to_string(reply_count_dock) + "\n\t replies needed " + to_string(replies_needed) + "\n\t !in_dock " + to_string(!in_dock) + "\n\treply_count_mechanics " + to_string(reply_count_mechanics) + "\n\t available mechanics " + to_string(available_mechanics) + "\n\t Z " + to_string(Z);
@@ -210,8 +212,15 @@ int main(int argc, char** argv) {
                     in_repair = false;
                     in_dock = false;
                     want_repair = false;
+                    
 
                     send_request(3, Z); // Wysyłamy zapytanie o zwolnienie mechaników
+                    msg = "Zwolnienie mechaników " + to_string(Z) + " do {"
+                    for (int pid : pid_to_inform_about_release) {
+                        msg += to_string(pid) + ", ";
+                    }
+                    msg += "}";
+                    print_color(msg);
                     pid_to_inform_about_release.clear(); // Czyścimy listę PID-ów do informowania o zwolnieniu mechaników
 
                     //przechodzimy przez kolejke i odsyłamy wszystkim osobom których requesty mieliśmy zakolejkowane że już okej
