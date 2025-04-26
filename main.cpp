@@ -212,6 +212,7 @@ int main(int argc, char** argv) {
                     want_repair = false;
 
                     send_request(3, Z); // Wysyłamy zapytanie o zwolnienie mechaników
+                    pid_to_inform_about_release.clear(); // Czyścimy listę PID-ów do informowania o zwolnieniu mechaników
 
                     //przechodzimy przez kolejke i odsyłamy wszystkim osobom których requesty mieliśmy zakolejkowane że już okej
                     for (auto it = queue.begin(); it != queue.end();) {
