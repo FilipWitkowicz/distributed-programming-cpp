@@ -63,7 +63,7 @@ void send_request(int tag, int needed_mechanics = 0) {
         }
     }
     if(tag == 1) print_color("BŁAGAM O DOK");
-    else if(tag == 2) print_color("BŁAGAM O MECHANIKÓW" + to_string(needed_mechanics));
+    else if(tag == 2) print_color("BŁAGAM O MECHANIKÓW " + to_string(needed_mechanics));
     for (int i = 0; i < N; ++i) {
 
         if (i != pid) {
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
         if (status.MPI_TAG == TAG_REQUEST) {
             if (req.tag == 1) {
                 // Doki
-                msg = "Otrzymany DOK REQUEST\n\tPID\tTIMESTAMP\tWant dock?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t" + to_string(want_dock);
+                msg = "Otrzymany DOK REQUEST\n\tPID\tTIMESTAMP\tWant dock?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t\t" + to_string(want_dock);
                 print_color(msg);
                 if (!in_dock && (!want_dock || (req.timestamp < lamport_clock_requests || (req.timestamp == lamport_clock_requests && req.pid < pid)))) {
                     send_reply(req.pid, 1); // zezwalamy na użycie doku
@@ -150,12 +150,14 @@ int main(int argc, char** argv) {
                     queue.push_back(req); // dodajemy do kolejki
                 }
             } else if (req.tag == 2) {
-                msg = "Otrzymany MECHANIC REQUEST\n\tPID\tTIMESTAMP\tWant repair?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t" + to_string(want_repair);
+                msg = "Otrzymany MECHANIC REQUEST\n\tPID\tTIMESTAMP\tWant repair?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t\t" + to_string(want_repair);
+                print_color(msg);
                 // Mechanicy
                 if (!in_dock && (!want_repair || (req.timestamp < lamport_clock_requests || (req.timestamp == lamport_clock_requests && req.pid < pid)))) {
                     send_reply(req.pid, 2, 0);
                     available_mechanics -= req.mechanics;
                     msg = "Ava M = " + to_string(available_mechanics);
+                    print_color(msg);
                 } else {
                     send_reply(req.pid, 2, Z);
                 }
