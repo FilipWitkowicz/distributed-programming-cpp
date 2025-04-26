@@ -241,6 +241,9 @@ int main(int argc, char** argv) {
                         }
                     }
                 } else {
+                    LC_last_request_mechanics = lamport_clock;
+                    msg = "Nie mamy wystarczająco mechaników, czekam na zwolnienie " + to_string(Z) + " mechaników od innych statków.";
+                    print_color(msg);
                     send_request(2, Z); // Nie mamy wystarczająco mechaników, wysyłamy nowe żądanie
                 }
             }
