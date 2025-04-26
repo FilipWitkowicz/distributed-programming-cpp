@@ -60,6 +60,7 @@ void send_request(int tag, int needed_mechanics = 0) {
         int pid_to_send;;
         for (int i = 0; i < pid_to_inform_about_release.size(); ++i) {
             pid_to_send = pid_to_inform_about_release[i];
+            print_color("Uwalniam mechaników " + to_string(needed_mechanics) + " do " + to_string(pid_to_send));
             MPI_Send(&req, sizeof(req), MPI_BYTE, pid_to_send, TAG_M_RELEASE, MPI_COMM_WORLD);
         }
         lamport_clock++;
