@@ -57,10 +57,10 @@ void send_request(int tag, int needed_mechanics = 0) {
     if(tag == 3) {
         print_color("Uwalniam mechaników " + to_string(needed_mechanics));
         // zwolnienie mechaników
-        for (int i = 0; i < N; ++i) {
-            if (i != pid) {
-                MPI_Send(&req, sizeof(req), MPI_BYTE, i, TAG_M_RELEASE, MPI_COMM_WORLD);
-            }
+        int pid_to_send;;
+        for (int i = 0; i < pid_to_inform_about_release.size(); ++i) {
+            pid_to_send = pid_to_inform_about_release[i];
+            MPI_Send(&req, sizeof(req), MPI_BYTE, pid_to_send, TAG_M_RELEASE, MPI_COMM_WORLD);
         }
     }
     if(tag == 1) print_color("BŁAGAM O DOK");
@@ -185,10 +185,9 @@ int main(int argc, char** argv) {
             else if (req.tag == 2) {
                 // Odpowiedź dotycząca mechaników
                 reply_count_mechanics++;
-                if (req.mechanics > 0) {
-                    available_mechanics -= req.mechanics;
-                    msg = "Ava M = " + to_string(available_mechanics);
-                    print_color(msg);
+                if (req.mechanics == 0) {
+                    // ten człowiek nam wysłał że nie zajmuje przed nami żadnych mechaników, czyli odjął sobie naszą liczbę mechaników, więc musimy mu potem dać release
+                    pid_to_inform_about_release.push_back(req.pid);
                 }
             }
             msg = "\n\tReply count dock " + to_string(reply_count_dock) + "\n\t replies needed " + to_string(replies_needed) + "\n\t !in_dock " + to_string(!in_dock) + "\n\treply_count_mechanics " + to_string(reply_count_mechanics) + "\n\t available mechanics " + to_string(available_mechanics) + "\n\t Z " + to_string(Z);
