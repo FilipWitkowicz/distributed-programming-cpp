@@ -115,12 +115,11 @@ int main(int argc, char** argv) {
     vector<Request_Reply> queue;
     string msg;
     while (true) {
-        sleep(2);
         // Jeżeli jesteśmy w pełni sprawni to losujemy czy idziemy na wojnę
         if(!in_dock && !want_dock && !in_repair && !want_repair) {
             // losujemy czy idziemy na wojne
             // a jak idziemy na wojne to losujemy ile naprawic
-            if (rand() % 10 == 0) {
+            if (rand() % 2 == 0) {
                 //bylismy na wojnie (krew, ból, smierc, łzy ta linijka jest bardzo naładowana emocjonalnie). Wojna była dużo brutalniejsza niż ktokolwiek zakładał. Misie były równie bezwzględne co słodkie. Wiele osób straciło ręce i nogi. Niektórzy stracili życie, a niektórzy przeżyli - ciężko powiedzieć, która z tych opcji była lepsza. Straty w ludziach były przez federacje przewidziane, jednak statki wróciły bardziej zniszczone niż zakładano. Obecnie najważniejsze dla federacji jest jedno - naprawić jak najszybciej zniszczone statki aby móc wysłać kolejne oddziały na wojnę.
                 print_color("Powrót z wojny, misie są bezlitosne");
                 want_dock = true;//wiec teraz chcemy do doku
@@ -194,7 +193,7 @@ int main(int argc, char** argv) {
                 std::cout << "[" << pid << "] Zadokowano!" << std::endl;
                 //in_dock = false;
                 want_dock = false;
-                reply_count_dock -= N;
+                reply_count_dock -= (N-1);
             }
             if(in_dock && reply_count_mechanics >= N - 1 && !in_repair) {
                 if (available_mechanics >= Z) {
