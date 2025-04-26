@@ -54,7 +54,7 @@ void update_clock(int received_ts) {
 void send_request(int tag, int needed_mechanics = 0) {
     Request_Reply req = {lamport_clock, pid, needed_mechanics, tag};
     if(tag == 3) {
-        print_color("Uwalniam mechaników");
+        print_color("Uwalniam mechaników " + to_string(needed_mechanics));
         // zwolnienie mechaników
         for (int i = 0; i < N; ++i) {
             if (i != pid) {
@@ -63,7 +63,7 @@ void send_request(int tag, int needed_mechanics = 0) {
         }
     }
     if(tag == 1) print_color("BŁAGAM O DOK");
-    else if(tag == 2) print_color("BŁAGAM O MECHANIKA");
+    else if(tag == 2) print_color("BŁAGAM O MECHANIKÓW" + to_string(needed_mechanics));
     for (int i = 0; i < N; ++i) {
 
         if (i != pid) {
@@ -74,10 +74,9 @@ void send_request(int tag, int needed_mechanics = 0) {
 }
 
 void send_reply(int dest, int tag, int occupied_mechanics = 0) {
-    string zasob;
-    if (tag == 2) zasob = "mechaników";
-    else zasob = "doki";
-    string msg = "Wysyłam odpowiedź do " + to_string(dest) + " o " + zasob;
+    string msg;
+    if (tag == 2) msg = "REPLY: do " + to_string(dest) + " ja zajmuje " + to_string(occupied_mechanics) + " mechaników";
+    else if(tag == 1) msg = "REPLY: do " + to_string(dest) + " o dok i zezwalam na użycie doku";
     print_color(msg);
     lamport_clock++;
     Request_Reply rep = {lamport_clock, pid, occupied_mechanics, tag};
@@ -141,14 +140,9 @@ int main(int argc, char** argv) {
         MPI_Recv(&req, sizeof(req), MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         update_clock(req.timestamp);
         if (status.MPI_TAG == TAG_REQUEST) {
-            string zasob;
-            if (req.tag == 2) zasob = "mechaników";
-            else if(req.tag == 1) zasob = "doki";
-            msg = "Dostałem zapytanie od " + to_string(req.pid) + " o " + zasob;
-            print_color(msg);
             if (req.tag == 1) {
                 // Doki
-                msg = "\tReq.timestamp = " +to_string(req.timestamp) + "\n\tlamport_clock_req = " + to_string(lamport_clock_requests) + "\n\treq.pid = " + to_string(req.pid) + "\n\tpid = " + to_string(pid);
+                msg = "Otrzymany DOK REQUEST\n\tPID\tTIMESTAMP\tWant dock?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t" + to_string(want_dock);
                 print_color(msg);
                 if (!in_dock && (!want_dock || (req.timestamp < lamport_clock_requests || (req.timestamp == lamport_clock_requests && req.pid < pid)))) {
                     send_reply(req.pid, 1); // zezwalamy na użycie doku
@@ -156,23 +150,25 @@ int main(int argc, char** argv) {
                     queue.push_back(req); // dodajemy do kolejki
                 }
             } else if (req.tag == 2) {
+                msg = "Otrzymany MECHANIC REQUEST\n\tPID\tTIMESTAMP\tWant repair?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(lamport_clock_requests) + "\t" + to_string(want_repair);
                 // Mechanicy
                 if (!in_dock && (!want_repair || (req.timestamp < lamport_clock_requests || (req.timestamp == lamport_clock_requests && req.pid < pid)))) {
                     send_reply(req.pid, 2, 0);
                     available_mechanics -= req.mechanics;
+                    msg = "Ava M = " + to_string(available_mechanics);
                 } else {
                     send_reply(req.pid, 2, Z);
-                    //queue.push_back(req); // dodajemy do kolejki
                 }
             }
             else if (req.tag == 3) {
                 // Zwolnienie mechaników
                 available_mechanics += req.mechanics;
+                msg = "Zwolniono mechaników: " + to_string(req.mechanics) + "\nAva M = " + to_string(available_mechanics);
+                print_color(msg);
             }
         }
 
         else if (status.MPI_TAG == TAG_REPLY) {
-            print_color("TAG_REPLY");
             update_clock(req.timestamp);
             if (req.pid == pid) {
                 continue; // Odpowiedź od samego siebie, ignoruj
