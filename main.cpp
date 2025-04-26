@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
                     
 
                     send_request(3, Z); // Wysyłamy zapytanie o zwolnienie mechaników
-                    msg = "Zwolnienie mechaników " + to_string(Z) + " do {"
+                    msg = "Zwolnienie mechaników " + to_string(Z) + " do {";
                     for (int pid : pid_to_inform_about_release) {
                         msg += to_string(pid) + ", ";
                     }
