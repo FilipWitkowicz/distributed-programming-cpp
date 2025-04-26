@@ -63,7 +63,7 @@ void send_request(int tag, int needed_mechanics = 0) {
         }
     }
     if(tag == 1) print_color("BŁAGAM O DOK");
-    else print_color("BŁAGAM O MECHANIKA");
+    else if(tag == 2) print_color("BŁAGAM O MECHANIKA");
     for (int i = 0; i < N; ++i) {
 
         if (i != pid) {
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &pid);
     print_color("Start programu");
 
-    const int K = 3; // liczba dokow
+    const int K = 1; // liczba dokow
     const int M = 5; // liczba mechanikow
 
     srand(time(NULL) + pid);
@@ -115,11 +115,12 @@ int main(int argc, char** argv) {
     vector<Request_Reply> queue;
     string msg;
     while (true) {
+        sleep(2);
         // Jeżeli jesteśmy w pełni sprawni to losujemy czy idziemy na wojnę
         if(!in_dock && !want_dock && !in_repair && !want_repair) {
             // losujemy czy idziemy na wojne
             // a jak idziemy na wojne to losujemy ile naprawic
-            if (rand() % 2 == 0) {
+            if (rand() % 10 == 0) {
                 //bylismy na wojnie (krew, ból, smierc, łzy ta linijka jest bardzo naładowana emocjonalnie). Wojna była dużo brutalniejsza niż ktokolwiek zakładał. Misie były równie bezwzględne co słodkie. Wiele osób straciło ręce i nogi. Niektórzy stracili życie, a niektórzy przeżyli - ciężko powiedzieć, która z tych opcji była lepsza. Straty w ludziach były przez federacje przewidziane, jednak statki wróciły bardziej zniszczone niż zakładano. Obecnie najważniejsze dla federacji jest jedno - naprawić jak najszybciej zniszczone statki aby móc wysłać kolejne oddziały na wojnę.
                 print_color("Powrót z wojny, misie są bezlitosne");
                 want_dock = true;//wiec teraz chcemy do doku
@@ -143,7 +144,7 @@ int main(int argc, char** argv) {
         if (status.MPI_TAG == TAG_REQUEST) {
             string zasob;
             if (req.tag == 2) zasob = "mechaników";
-            else zasob = "doki";
+            else if(req.tag == 1) zasob = "doki";
             msg = "Dostałem zapytanie od " + to_string(req.pid) + " o " + zasob;
             print_color(msg);
             if (req.tag == 1) {
@@ -195,7 +196,7 @@ int main(int argc, char** argv) {
                 want_dock = false;
                 reply_count_dock -= N;
             }
-            if(reply_count_mechanics >= N - 1 && !in_repair) {
+            if(in_dock && reply_count_mechanics >= N - 1 && !in_repair) {
                 if (available_mechanics >= Z) {
                     in_repair = true;
                     std::cout << "[" << pid << "] Rozpoczynam naprawe z " << Z << " mechanikami." << std::endl;
