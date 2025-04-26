@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
         MPI_Status status;
         Request_Reply req;
 
-        MPI_Iprobe(MPI_ANY_SOURCE, TAG_REQUEST, MPI_COMM_WORLD, &flag, &status);
+        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
         if (!flag) {
             continue;// Nie ma wiadomości, kontynuuj
         }
