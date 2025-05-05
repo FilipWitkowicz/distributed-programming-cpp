@@ -54,5 +54,11 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp"
+    },
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
     }
 }
