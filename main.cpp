@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
         }
 
         else if (status.MPI_TAG == TAG_REPLY) {
-            update_clock(req.timestamp);
+            //update_clock(req.timestamp);
             if (req.pid == pid) {
                 continue; // Odpowiedź od samego siebie, ignoruj
             }
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
                     in_repair = false;
                     in_dock = false;
                     want_repair = false;
-                    
+                    reply_count_mechanics = 0;
 
                     send_request(3, Z); // Wysyłamy zapytanie o zwolnienie mechaników
                     msg = "Zwolnienie mechaników " + to_string(Z) + " do {";
