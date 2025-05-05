@@ -69,7 +69,7 @@ void send_request(int tag, int needed_mechanics = 0) {
     if(tag == 1) print_color("BŁAGAM O DOK");
     else if(tag == 2) print_color("BŁAGAM O MECHANIKÓW " + to_string(needed_mechanics));
     for (int i = 0; i < N; ++i) {
-
+        
         if (i != pid) {
             MPI_Send(&req, sizeof(req), MPI_BYTE, i, TAG_REQUEST, MPI_COMM_WORLD);
         }
@@ -85,6 +85,22 @@ void send_reply(int dest, int tag, int occupied_mechanics = 0) {
     lamport_clock++;
     Request_Reply rep = {lamport_clock, pid, occupied_mechanics, tag};
     MPI_Send(&rep, sizeof(rep), MPI_BYTE, dest, TAG_REPLY, MPI_COMM_WORLD);
+}
+
+void process_queue(vector<Request_Reply>& queue) {
+    for (auto it = queue.begin(); it != queue.end();) {
+        if (it->tag == 1) {
+            // Obsługa doków
+            send_reply(it->pid, 1);
+            it = queue.erase(it); // Usuwamy z kolejki
+        } else if (it->tag == 2) {
+            // Obsługa mechaników
+            send_reply(it->pid, 2, 0);
+            it = queue.erase(it); // Usuwamy z kolejki
+        } else {
+            ++it; // Przechodzimy do następnego elementu
+        }
+    }
 }
 
 void handle_request(const Request_Reply& req, MPI_Status& status, vector<Request_Reply>& queue, int& available_mechanics, int& LC_last_request_dock, int& LC_last_request_mechanics, bool& want_dock, bool& want_repair, bool& in_dock, int Z) {
@@ -168,21 +184,6 @@ void handle_reply(const Request_Reply& req, int& reply_count_dock, int& reply_co
     }
 }
 
-void process_queue(vector<Request_Reply>& queue) {
-    for (auto it = queue.begin(); it != queue.end();) {
-        if (it->tag == 1) {
-            // Obsługa doków
-            send_reply(it->pid, 1);
-            it = queue.erase(it); // Usuwamy z kolejki
-        } else if (it->tag == 2) {
-            // Obsługa mechaników
-            send_reply(it->pid, 2, 0);
-            it = queue.erase(it); // Usuwamy z kolejki
-        } else {
-            ++it; // Przechodzimy do następnego elementu
-        }
-    }
-}
 
 int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
