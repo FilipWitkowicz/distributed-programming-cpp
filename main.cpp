@@ -39,7 +39,7 @@ bool want_repair = false;
 bool in_repair = false;
 
 
-int replies_needed = N - K;
+
 int reply_count_dock = 0;
 int reply_count_mechanics = 0;
 
@@ -144,7 +144,7 @@ void handle_request(Request_Reply req) {
     }
 }
 
-void handle_reply(Request_Reply req) {
+void handle_reply(Request_Reply req, int replies_needed) {
     //update_clock(req.timestamp);
     if (req.tag == 1) {
         // Odpowiedź dotycząca doków
@@ -227,6 +227,8 @@ int main(int argc, char** argv) {
     MPI_Status status;
     Request_Reply req;
 
+    int replies_needed = N - K;
+
     while (true) {
         // Jeżeli jesteśmy w pełni sprawni to losujemy czy idziemy na wojnę
         if(!in_dock && !want_dock && !in_repair && !want_repair) {
@@ -257,7 +259,7 @@ int main(int argc, char** argv) {
         }
 
         else if (status.MPI_TAG == TAG_REPLY) {
-            handle_reply(req);
+            handle_reply(req, replies_needed);
         }
 
     }
