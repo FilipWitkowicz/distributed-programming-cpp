@@ -50,7 +50,7 @@ int LC_last_request_mechanics = 0;
 
 int flag;
 
-vector<Request_Reply> queue;
+vector<Request_Reply> request_queue;
 string msg;
 
 
@@ -121,7 +121,7 @@ void handle_request(Request_Reply req) {
         if (!in_dock && (!want_dock || (req.timestamp < LC_last_request_dock || (req.timestamp == LC_last_request_dock && req.pid < pid)))) {
             send_reply(req.pid, 1); // zezwalamy na użycie doku
         } else {
-            queue.push_back(req); // dodajemy do kolejki
+            request_queue.push_back(req); // dodajemy do kolejki
         }
     } else if (req.tag == 2) {
         msg = "Otrzymany MECHANIC REQUEST\n\tPID\tTIMESTAMP\tWant repair?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(LC_last_request_mechanics) + "\t\t" + to_string(want_repair);
@@ -195,15 +195,15 @@ void handle_reply(Request_Reply req) {
             pid_to_inform_about_release.clear(); // Czyścimy listę PID-ów do informowania o zwolnieniu mechaników
 
             //przechodzimy przez kolejke i odsyłamy wszystkim osobom których requesty mieliśmy zakolejkowane że już okej
-            for (auto it = queue.begin(); it != queue.end();) {
+            for (auto it = request_queue.begin(); it != request_queue.end();) {
                 if (it->tag == 1) {
                     // Doki
                     send_reply(it->pid, 1);
-                    it = queue.erase(it); // Usuwamy z kolejki po wysłaniu odpowiedzi
+                    it = request_queue.erase(it); // Usuwamy z kolejki po wysłaniu odpowiedzi
                 } else if (it->tag == 2) {
                     // Mechanicy
                     send_reply(it->pid, 2, 0);
-                    it = queue.erase(it); // Usuwamy z kolejki po wysłaniu odpowiedzi
+                    it = request_queue.erase(it); // Usuwamy z kolejki po wysłaniu odpowiedzi
                 } else {
                     ++it; // Przechodzimy do następnego elementu
                 }
