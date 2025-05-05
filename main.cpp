@@ -146,9 +146,6 @@ void handle_request(Request_Reply req) {
 
 void handle_reply(Request_Reply req) {
     //update_clock(req.timestamp);
-    if (req.pid == pid) {
-        continue; // Odpowiedź od samego siebie, ignoruj
-    }
     if (req.tag == 1) {
         // Odpowiedź dotycząca doków
         reply_count_dock++;
