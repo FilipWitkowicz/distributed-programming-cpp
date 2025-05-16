@@ -27,9 +27,9 @@ struct Request_Reply {
 
 int lamport_clock = 0;
 int N, pid; // N - liczba statkow
-vector<int> pid_to_inform_about_release; 
+vector<int> pid_to_inform_about_release;
 
-const int K = 1; // liczba dokow
+const int K = 2; // liczba dokow
 const int M = 5; // liczba mechanikow
 
 int Z = 0;
@@ -39,7 +39,7 @@ bool want_repair = false;
 bool in_repair = false;
 
 
-int replies_needed = N - K;
+
 int reply_count_dock = 0;
 int reply_count_mechanics = 0;
 
@@ -70,7 +70,7 @@ void print_color(const std::string& message) {
     const char* color = colors[pid % 7]; // Modulo, aby nie wyjść poza tablicę
 
     // Wypisanie wiadomości w kolorze
-    std::cout << color << "[" << pid << "] " << message << "\033[0m" << std::endl; // \033[0m resetuje kolor
+    std::cout << color << "[" << pid << "] " << "[" << lamport_clock << "]" << message << "\033[0m" << std::endl; // \033[0m resetuje kolor
 }
 
 void update_clock(int received_ts) {
@@ -80,12 +80,12 @@ void update_clock(int received_ts) {
 void send_request(int tag, int needed_mechanics = 0) {
     Request_Reply req = {lamport_clock, pid, needed_mechanics, tag};
     if(tag == 3) {
-        print_color("Uwalniam mechaników " + to_string(needed_mechanics));
+        //print_color("Uwalniam mechaników " + to_string(needed_mechanics));
         // zwolnienie mechaników
         int pid_to_send;;
         for (int i = 0; i < pid_to_inform_about_release.size(); ++i) {
             pid_to_send = pid_to_inform_about_release[i];
-            print_color("Uwalniam mechaników " + to_string(needed_mechanics) + " do " + to_string(pid_to_send));
+            //print_color("Uwalniam mechaników " + to_string(needed_mechanics) + " do " + to_string(pid_to_send));
             MPI_Send(&req, sizeof(req), MPI_BYTE, pid_to_send, TAG_REQUEST, MPI_COMM_WORLD);
         }
         lamport_clock++;
@@ -104,9 +104,9 @@ void send_request(int tag, int needed_mechanics = 0) {
 
 void send_reply(int dest, int tag, int occupied_mechanics = 0) {
     string msg;
-    if (tag == 2) msg = "REPLY: do " + to_string(dest) + " ja zajmuje " + to_string(occupied_mechanics) + " mechaników";
-    else if(tag == 1) msg = "REPLY: do " + to_string(dest) + " o dok i zezwalam na użycie doku";
-    print_color(msg);
+    //if (tag == 2) msg = "REPLY: do " + to_string(dest) + " ja zajmuje " + to_string(occupied_mechanics) + " mechaników";
+    //else if(tag == 1) msg = "REPLY: do " + to_string(dest) + " o dok i zezwalam na użycie doku";
+    //print_color(msg);
     lamport_clock++;
     Request_Reply rep = {lamport_clock, pid, occupied_mechanics, tag};
     MPI_Send(&rep, sizeof(rep), MPI_BYTE, dest, TAG_REPLY, MPI_COMM_WORLD);
@@ -117,15 +117,15 @@ void handle_request(Request_Reply req) {
     if (req.tag == 1) {
         // Doki
         msg = "Otrzymany DOK REQUEST\n\tPID\tTIMESTAMP\tWant dock?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(LC_last_request_dock) + "\t\t" + to_string(want_dock);
-        print_color(msg);
+        //print_color(msg);
         if (!in_dock && (!want_dock || (req.timestamp < LC_last_request_dock || (req.timestamp == LC_last_request_dock && req.pid < pid)))) {
             send_reply(req.pid, 1); // zezwalamy na użycie doku
         } else {
-            request_queue.push_back(req); // dodajemy do kolejki
+            request_queue.push_back(req); // dodajemy mechanicsdo kolejki
         }
     } else if (req.tag == 2) {
         msg = "Otrzymany MECHANIC REQUEST\n\tPID\tTIMESTAMP\tWant repair?\nHIM\t" + to_string(req.pid) + "\t" + to_string(req.timestamp) + "\t" + "\nME\t" + to_string(pid) + "\t" + to_string(LC_last_request_mechanics) + "\t\t" + to_string(want_repair);
-        print_color(msg);
+        //print_color(msg);
         // Mechanicy
         if (!in_dock && (!want_repair || (req.timestamp < LC_last_request_mechanics || (req.timestamp == LC_last_request_mechanics && req.pid < pid)))) {
             send_reply(req.pid, 2, 0);
@@ -140,11 +140,11 @@ void handle_request(Request_Reply req) {
         // Zwolnienie mechaników
         available_mechanics += req.mechanics;
         msg = "Zwolniono mechaników: " + to_string(req.mechanics) + "\nAva M = " + to_string(available_mechanics);
-        print_color(msg);
+        //print_color(msg);
     }
 }
 
-void handle_reply(Request_Reply req) {
+void handle_reply(Request_Reply req, int replies_needed) {
     //update_clock(req.timestamp);
     if (req.tag == 1) {
         // Odpowiedź dotycząca doków
@@ -157,15 +157,15 @@ void handle_reply(Request_Reply req) {
             // ten człowiek nam wysłał że nie zajmuje przed nami żadnych mechaników, czyli odjął sobie naszą liczbę mechaników, więc musimy mu potem dać release
             pid_to_inform_about_release.push_back(req.pid);
             msg = "Dodano do release: " + to_string(req.pid);
-            print_color(msg);
+            //print_color(msg);
         }
     }
     msg = "\n\tReply count dock " + to_string(reply_count_dock) + "\n\t replies needed " + to_string(replies_needed) + "\n\t !in_dock " + to_string(!in_dock) + "\n\treply_count_mechanics " + to_string(reply_count_mechanics) + "\n\t available mechanics " + to_string(available_mechanics) + "\n\t Z " + to_string(Z);
-    print_color(msg);
+    //print_color(msg);
     // Sprawdzanie, czy mamy wystarczająco doków
     if (reply_count_dock >= replies_needed && !in_dock) {
         in_dock = true;
-        print_color("[" + to_string(pid) + "] Zadokowano!");
+        print_color("Zadokowano!");
         //in_dock = false;
         want_dock = false;
         reply_count_dock -= (N-1);
@@ -173,9 +173,9 @@ void handle_reply(Request_Reply req) {
     if(in_dock && reply_count_mechanics >= N - 1 && !in_repair) {
         if (available_mechanics >= Z) {
             in_repair = true;
-            std::cout << "[" << pid << "] Rozpoczynam naprawe z " << Z << " mechanikami." << std::endl;
+            print_color("[" + to_string(pid) + "] Rozpoczynam naprawe z " + to_string(Z) + " mechanikami.");
             // Teraz naprawa
-            sleep(1);
+            sleep(3);
             // Koniec naprawy
             in_repair = false;
             in_dock = false;
@@ -209,7 +209,7 @@ void handle_reply(Request_Reply req) {
             LC_last_request_mechanics = lamport_clock;
             reply_count_mechanics = 0;
             msg = "Nie mamy wystarczająco mechaników, czekam na zwolnienie " + to_string(Z) + " mechaników od innych statków.";
-            print_color(msg);
+            //print_color(msg);
             send_request(2, Z); // Nie mamy wystarczająco mechaników, wysyłamy nowe żądanie
         }
     }
@@ -226,6 +226,8 @@ int main(int argc, char** argv) {
     srand(time(NULL) + pid);
     MPI_Status status;
     Request_Reply req;
+
+    int replies_needed = N - K;
 
     while (true) {
         // Jeżeli jesteśmy w pełni sprawni to losujemy czy idziemy na wojnę
@@ -257,11 +259,10 @@ int main(int argc, char** argv) {
         }
 
         else if (status.MPI_TAG == TAG_REPLY) {
-            handle_reply(req);
+            handle_reply(req, replies_needed);
         }
 
     }
 
     MPI_Finalize();
     return 0;
-}
